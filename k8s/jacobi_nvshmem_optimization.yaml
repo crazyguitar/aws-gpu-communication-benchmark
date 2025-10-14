@@ -1,0 +1,98 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: jacobi-nvshmem-optimization
+spec:
+  runPolicy:
+    cleanPodPolicy: Running
+    backoffLimit: 20
+  slotsPerWorker: 8
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+         spec:
+          restartPolicy: OnFailure
+          containers:
+          - image: <ecr_image_url>
+            imagePullPolicy: IfNotPresent
+            name: jacobi-nvshmem-optimization-launcher
+            env:
+             - name: PATH
+               value: $PATH:/opt/amazon/efa/bin:/usr/bin
+            command:
+            - /opt/amazon/openmpi/bin/mpirun
+            - --allow-run-as-root
+            - --tag-output
+            - -np
+            - "16"
+            - -N
+            - "8"
+            - --bind-to
+            - none
+            - -x
+            - PATH
+            - -x
+            - LD_LIBRARY_PATH
+            - -x
+            - FI_PROVIDER=efa
+            - -x
+            - FI_EFA_FORK_SAFE=1
+            - -x
+            - NCCL_DEBUG=INFO
+            - -x
+            - NCCL_BUFFSIZE=8388608
+            - -x
+            - NCCL_P2P_NET_CHUNKSIZE=524288
+            - -x
+            - NCCL_TUNER_PLUGIN=/opt/aws-ofi-nccl/install/lib/libnccl-ofi-tuner.so
+            - -x
+            - NVSHMEM_DEBUG=INFO
+            - -x
+            - NVSHMEM_REMOTE_TRANSPORT=libfabric
+            - -x
+            - NVSHMEM_LIBFABRIC_PROVIDER=efa
+            - -x
+            - NVIDIA_VISIBLE_DEVICES=all
+            - -x
+            - CUDA_DEVICE_ORDER=PCI_BUS_ID
+            - --mca
+            - btl
+            - tcp,self
+            - --mca
+            - btl_tcp_if_exclude
+            - lo,docker0,veth_def_agent
+            - /gpu-communication-benchmark/build/third_party/multi-gpu-programming-models/nvshmem/nvshmem
+            - -use_block_comm
+            - -norm_overlap
+            - -neighborhood_sync
+    Worker:
+      replicas: 2
+      template:
+        spec:
+          nodeSelector:
+            node.kubernetes.io/instance-type: "ml.p5.48xlarge" # hyperpod instance type
+          containers:
+          - image: <ecr_image_url>
+            imagePullPolicy: IfNotPresent
+            name: jacobi-nvshmem-optimization-worker
+            securityContext:
+              privileged: true
+            volumeMounts:
+            - name: shmem
+              mountPath: /dev/shm
+            resources:
+              limits:
+                nvidia.com/gpu: 8
+                hugepages-2Mi: 5120Mi
+                vpc.amazonaws.com/efa: 32
+                memory: 32000Mi
+              requests:
+                nvidia.com/gpu: 8
+                hugepages-2Mi: 5120Mi
+                vpc.amazonaws.com/efa: 32
+                memory: 32000Mi
+          volumes:
+          - name: shmem
+            hostPath:
+              path: /dev/shm

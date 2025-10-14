@@ -1,0 +1,3 @@
+[submodule "third_party/multi-gpu-programming-models"]
+	path = third_party/multi-gpu-programming-models
+	url = https://github.com/crazyguitar/multi-gpu-programming-models.git
