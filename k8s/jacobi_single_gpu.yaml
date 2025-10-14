@@ -1,0 +1,74 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: jacobi-single-gpu
+spec:
+  runPolicy:
+    cleanPodPolicy: Running
+    backoffLimit: 20
+  slotsPerWorker: 8
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+         spec:
+          restartPolicy: OnFailure
+          containers:
+          - image: <ecr_image_url>
+            imagePullPolicy: IfNotPresent
+            name: jacobi-single-gpu
+            env:
+             - name: PATH
+               value: $PATH:/opt/amazon/efa/bin:/usr/bin
+            command:
+            - /opt/amazon/openmpi/bin/mpirun
+            - --allow-run-as-root
+            - --tag-output
+            - -np
+            - "1"
+            - -N
+            - "1"
+            - --bind-to
+            - none
+            - -x
+            - PATH
+            - -x
+            - LD_LIBRARY_PATH
+            - --mca
+            - pml
+            - ^ucx
+            - --mca
+            - btl
+            - tcp,self
+            - --mca
+            - btl_tcp_if_exclude
+            - lo,docker0,veth_def_agent
+            - /gpu-communication-benchmark/build/third_party/multi-gpu-programming-models/single_gpu/single_gpu
+    Worker:
+      replicas: 1
+      template:
+        spec:
+          nodeSelector:
+            node.kubernetes.io/instance-type: "ml.p5.48xlarge" # hyperpod instance type
+          containers:
+          - image: <ecr_image_url>
+            imagePullPolicy: IfNotPresent
+            name: jacobi-single-gpu
+            volumeMounts:
+            - name: shmem
+              mountPath: /dev/shm
+            resources:
+              limits:
+                nvidia.com/gpu: 8
+                hugepages-2Mi: 5120Mi
+                vpc.amazonaws.com/efa: 32
+                memory: 32000Mi
+              requests:
+                nvidia.com/gpu: 8
+                hugepages-2Mi: 5120Mi
+                vpc.amazonaws.com/efa: 32
+                memory: 32000Mi
+          volumes:
+          - name: shmem
+            hostPath:
+              path: /dev/shm
