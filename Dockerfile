@@ -165,3 +165,6 @@ ENV PMIX_MCA_gds=hash
 
 ## Set LD_PRELOAD for NCCL library
 ENV LD_PRELOAD=/opt/nccl/build/lib/libnccl.so
+
+ADD . /gpu-communication-benchmark
+RUN cd /gpu-communication-benchmark && make
