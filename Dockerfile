@@ -11,8 +11,8 @@ FROM nvcr.io/nvidia/cuda:${CUDA_VERSION}-devel-ubuntu22.04
 ARG GDRCOPY_VERSION=v2.5.1
 ARG EFA_INSTALLER_VERSION=1.43.2
 ARG AWS_OFI_NCCL_VERSION=v1.16.3
-ARG NCCL_VERSION=v2.27.7-1
-ARG NCCL_TESTS_VERSION=v2.16.9
+ARG NCCL_VERSION=v2.28.7-1
+ARG NCCL_TESTS_VERSION=v2.17.2
 
 RUN apt-get update -y && apt-get upgrade -y
 RUN apt-get remove -y --allow-change-held-packages \
@@ -165,6 +165,3 @@ ENV PMIX_MCA_gds=hash
 
 ## Set LD_PRELOAD for NCCL library
 ENV LD_PRELOAD=/opt/nccl/build/lib/libnccl.so
-
-ADD . /gpu-communication-benchmark
-RUN cd /gpu-communication-benchmark && make

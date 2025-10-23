@@ -43,11 +43,12 @@ srun -N 1 --pty /bin/ash
 make sqush
 
 # Start an enroot environment and build binaries
-enroot create --name efa gpucomm+latest.sqsh
+enroot create --name gpucomm gpucomm+latest.sqsh
 enroot start --mount /fsx:/fsx gpucomm /bin/bash
 make
 
 # Launch a NVSHMEM benchmark job on a Slurm cluster
+salloc -N 2
 bash slurm/jacobi_nvshmem.sh
 ```
 
