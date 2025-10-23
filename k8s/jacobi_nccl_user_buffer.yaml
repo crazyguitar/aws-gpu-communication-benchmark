@@ -55,7 +55,7 @@ spec:
             - --mca
             - btl_tcp_if_exclude
             - lo,docker0,veth_def_agent
-            - /gpu-communication-benchmark/build/third_party/multi-gpu-programming-models/nccl_graphs/nccl-graphs
+            - /gpu-communication-benchmark/build/third_party/multi-gpu-programming-models/nccl/nccl-simple
             - -user_buffer_reg
     Worker:
       replicas: 2
