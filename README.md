@@ -1,5 +1,8 @@
 # GPU Communication Over AWS EFA Benchmarking
 
+[![DOI](https://zenodo.org/badge/1075982575.svg)](https://doi.org/10.5281/zenodo.17923832)
+
+
 The efficiency of GPU communication and interconnects is a key determinant of
 large language model (LLM) inference/training performance, complementing computational
 capabilities. In this study, we conduct a systematic benchmark of two widely
